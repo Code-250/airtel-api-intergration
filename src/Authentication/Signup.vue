@@ -7,149 +7,126 @@
       <div class="form-title-container">
         <div class="form-section">
           <p class="account">HAVE AN ACCOUNT?</p>
-          <router-link to="/signin" class="form-link">SIGN-IN</router-link>
+          <router-link to="/" class="form-link">SIGN-IN</router-link>
         </div>
         <p class="form-title">Create a new Payment account</p>
       </div>
-      <v-form v-model="valid">
-        <v-text-field
-          v-model="phone"
-          type="text"
-          :error-messages="phoneErrors"
-          label="first Name"
-          required
-          @input="$v.phone.$touch()"
-          @blur="$v.phone.$touch()"
-        ></v-text-field>
-        <v-text-field
-          v-model="amount"
-          :error-messages="amountErrors"
-          label="last Name"
-          type="text"
-          required
-          @input="$v.amount.$touch()"
-          @blur="$v.amount.$touch()"
-        ></v-text-field>
-        <v-text-field
-          v-model="amount"
-          :error-messages="amountErrors"
-          label="Phone Number"
-          type="number"
-          required
-          @input="$v.amount.$touch()"
-          @blur="$v.amount.$touch()"
-        ></v-text-field>
-        <v-text-field
-          v-model="amount"
-          :error-messages="amountErrors"
-          label="Password"
-          type="password"
-          required
-          @input="$v.amount.$touch()"
-          @blur="$v.amount.$touch()"
-        ></v-text-field>
-        <v-btn
-          class="mr-4"
-          dark
-          @click="submit"
-          color="red darken-1"
-          :elevation="0"
-        >
-          SignUp
-        </v-btn>
-      </v-form>
+      <template>
+        <form>
+          <v-text-field
+            v-model="firstname"
+            :error-messages="firstnameErrors"
+            label="first Name"
+            required
+            @input="$v.firstname.$touch()"
+            @blur="$v.firstname.$touch()"
+          ></v-text-field>
+          <v-text-field
+            v-model="lastname"
+            :error-messages="lastnameErrors"
+            label="last Name"
+            required
+            @input="$v.lastname.$touch()"
+            @blur="$v.lastname.$touch()"
+          ></v-text-field>
+          <v-text-field
+            v-model="phone"
+            :error-messages="phoneErrors"
+            label="Phone Number"
+            type="number"
+            required
+            @input="$v.phone.$touch()"
+            @blur="$v.phone.$touch()"
+          ></v-text-field>
+          <v-text-field
+            v-model="pin"
+            :error-messages="pinErrors"
+            label="Password"
+            type="password"
+            required
+            @input="$v.pin.$touch()"
+            @blur="$v.pin.$touch()"
+          ></v-text-field>
+
+          <v-btn class="mr-4" @click="submit">
+            signup
+          </v-btn>
+        </form>
+      </template>
     </div>
   </div>
 </template>
 <script>
 import { validationMixin } from "vuelidate";
-import { required, maxLength, minLength } from "vuelidate/lib/validators";
+import { required, maxLength } from "vuelidate/lib/validators";
+
 export default {
   mixins: [validationMixin],
+
   validations: {
-    phone: {
-      required,
-      minLength: minLength(10),
-      maxLength: maxLength(10),
-    },
-    amount: { required },
-    pin: { required, minLength: minLength(4) },
-    checkbox: {
-      checked(val) {
-        return val;
-      },
-    },
+    firstname: { required, maxLength: maxLength(10) },
+    lastname: { required, maxLength: maxLength(10) },
+    phone: { required },
+    pin: { required },
   },
+
   data: () => ({
+    firstname: "",
+    lastname: "",
     phone: "",
-    amount: "",
     pin: "",
-    checkbox: false,
-    dialog: false,
-    dialog1: false,
   }),
+
   computed: {
-    checkboxErrors() {
+    firstnameErrors() {
       const errors = [];
-      if (!this.$v.checkbox.$dirty) return errors;
-      !this.$v.checkbox.checked && errors.push("You must agree to continue!");
+      if (!this.$v.firstname.$dirty) return errors;
+      !this.$v.firstname.maxLength &&
+        errors.push("first Name must be at most 10 characters long");
+      !this.$v.firstname.required && errors.push("first Name is required.");
       return errors;
     },
-    selectErrors() {
+    lastnameErrors() {
       const errors = [];
-      if (!this.$v.select.$dirty) return errors;
-      !this.$v.select.required && errors.push("Item is required");
+      if (!this.$v.lastname.$dirty) return errors;
+      !this.$v.lastname.maxLength &&
+        errors.push("last Name must be at most 10 characters long");
+      !this.$v.lastname.required && errors.push("last Name is required.");
       return errors;
     },
     phoneErrors() {
       const errors = [];
       if (!this.$v.phone.$dirty) return errors;
-      !this.$v.phone.maxLength &&
-        errors.push("Phone Number must be 10 characters long");
-      !this.$v.phone.required && errors.push("phone Number field is required.");
-      return errors;
-    },
-    amountErrors() {
-      const errors = [];
-      if (!this.$v.amount.$dirty) return errors;
-      !this.$v.amount.required && errors.push("Amount field is required");
+      !this.$v.phone.required && errors.push("Phone number is required");
       return errors;
     },
     pinErrors() {
       const errors = [];
       if (!this.$v.pin.$dirty) return errors;
-      !this.$v.pin.required && errors.push("Pin field is required");
+      !this.$v.pin.required && errors.push("Pin is required");
       return errors;
     },
   },
+
   methods: {
-    submit() {
+    submit: async () => {
       this.$v.$touch();
-      const formData = {
-        phoneNumber: this.phone,
-        Amount: this.amount,
-        Pin: this.pin,
-      };
+      // this.$router.replace("/");
       if (
-        !this.$v.phone.$error &&
-        !this.$v.amount.$error &&
-        this.$v.checkbox.checked
-      )
-        this.dialog1 = !this.dialog1;
-      console.log(formData);
+        this.firstname.length > 0 &&
+        this.lastname.length > 0 &&
+        this.phone.length > 0 &&
+        this.pin.length > 0
+      ) {
+        this.$router.replace("/");
+      }
     },
-    authenticate() {
-      this.$v.$touch();
-      if (!this.$v.pin.$error) this.dialog1 = !this.dialog1;
-    },
-    clearAndClose() {
+    clear() {
       this.$v.$reset();
+      this.firstname = "";
+      this.lastname = "";
       this.phone = "";
-      this.amount = "";
       this.pin = "";
-      this.checkbox = false;
-      this.dialog1 = false;
-      this.dialog = false;
     },
   },
 };
@@ -159,6 +136,15 @@ export default {
 .v-application .primary--text {
   color: red !important;
   caret-color: red !important;
+}
+.signup {
+  max-width: 100% !important;
+  background-color: rgb(250, 250, 250);
+  height: 100vh;
+}
+.navigation {
+  box-shadow: 0 3px 6px rgb(0 0 0 / 16%);
+  border: 1px solid red;
 }
 .signup-container {
   max-width: 100% !important;

@@ -10,12 +10,14 @@ import vuetify from "@/plugins/vuetify";
 const routes = [
   { path: "/signup", component: Signup },
   { path: "/dashboard", component: VueTable },
-  { path: "/signin", component: SignIn },
+  { path: "/", component: SignIn },
 ];
 const router = new VueRouter({
   routes,
   mode: "history",
 });
+
+
 Vue.config.productionTip = false;
 Vue.use(VueRouter);
 

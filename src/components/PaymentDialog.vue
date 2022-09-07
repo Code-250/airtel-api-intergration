@@ -20,15 +20,31 @@
               @input="$v.phone.$touch()"
               @blur="$v.phone.$touch()"
             ></v-text-field>
-            <v-text-field
-              v-model="amount"
-              :error-messages="amountErrors"
-              label="Amount"
-              type="number"
+            <v-select
+              v-model="select"
+              :items="items"
+              :error-messages="selectErrors"
+              label="Select a Product"
+              item-text="product"
+              item-value="amount"
               required
-              @input="$v.amount.$touch()"
-              @blur="$v.amount.$touch()"
-            ></v-text-field>
+              return-object
+              @change="$v.select.$touch()"
+              @blur="$v.select.$touch()"
+            ></v-select>
+            <v-select
+              v-model="select"
+              :error-messages="amountErrors"
+              :items="items"
+              label="Amount"
+              required
+              disabled
+              readOnly
+              item-text="amount"
+              item-value="amount"
+              @change="$v.select.$touch()"
+              @blur="$v.select.$touch()"
+            ></v-select>
             <v-checkbox
               v-model="checkbox"
               :error-messages="checkboxErrors"
@@ -59,7 +75,7 @@
         </template>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialog1" pesistent content-class="dialog">
+    <v-dialog v-model="dialog1" persistent content-class="dialog">
       <!-- <template v-slot:activator="{ on, attrs }">
         <v-btn color="red" dark v-bind="attrs" v-on="on" :elevation="0">
           start Paying
@@ -112,6 +128,7 @@ export default {
       minLength: minLength(10),
       maxLength: maxLength(10),
     },
+    select: { required },
     amount: { required },
     pin: { required, minLength: minLength(4) },
     checkbox: {
@@ -122,12 +139,23 @@ export default {
   },
   data: () => ({
     phone: "",
-    amount: "",
+    amount: null,
     pin: "",
     checkbox: false,
     dialog: false,
     dialog1: false,
+    select: null,
+    items: [
+      { product: "Iphone x", amount: 50000 },
+      { product: "sumsang A+", amount: 20000 },
+      { product: "Tecno spark 4", amount: 1000 },
+    ],
   }),
+  // watch: {
+  //   amount: function(selectedValue) {
+  //     this.$emit("updateQuantity", selectedValue);
+  //   },
+  // },
   computed: {
     checkboxErrors() {
       const errors = [];
@@ -138,9 +166,10 @@ export default {
     selectErrors() {
       const errors = [];
       if (!this.$v.select.$dirty) return errors;
-      !this.$v.select.required && errors.push("Item is required");
+      !this.$v.select.required && errors.push("Product is required");
       return errors;
     },
+
     phoneErrors() {
       const errors = [];
       if (!this.$v.phone.$dirty) return errors;
@@ -151,8 +180,8 @@ export default {
     },
     amountErrors() {
       const errors = [];
-      if (!this.$v.amount.$dirty) return errors;
-      !this.$v.amount.required && errors.push("Amount field is required");
+      if (!this.$v.select.$dirty) return errors;
+      !this.$v.select.required && errors.push("Amount field is required");
       return errors;
     },
     pinErrors() {
@@ -163,33 +192,71 @@ export default {
     },
   },
   methods: {
+    changeUser() {
+      console.log(this.select);
+    },
     submit() {
       this.$v.$touch();
       const formData = {
         phoneNumber: this.phone,
-        Amount: this.amount,
+        product: this.select.product,
+        Amount: this.select.amount,
         Pin: this.pin,
       };
       if (
         !this.$v.phone.$error &&
-        !this.$v.amount.$error &&
+        !this.$v.select.$error &&
         this.$v.checkbox.checked
       )
         this.dialog1 = !this.dialog1;
       console.log(formData);
     },
     authenticate() {
+      const formData = {
+        phoneNumber: this.phone,
+        productName: this.select.product,
+        Amount: this.select.amount,
+        Pin: this.pin,
+      };
+      console.log("after authentication", formData);
       this.$v.$touch();
-      if (!this.$v.pin.$error) this.dialog1 = !this.dialog1;
+      if (!this.$v.pin.$error) {
+        this.dialog1 = !this.dialog1;
+        this.dialog = !this.dialog;
+        this.phone = "";
+        this.amount = "";
+        this.select = "";
+        this.pin = "";
+      }
     },
     clearAndClose() {
       this.$v.$reset();
       this.phone = "";
       this.amount = "";
+      this.select = "";
       this.pin = "";
       this.checkbox = false;
       this.dialog1 = false;
       this.dialog = false;
+    },
+    selectionChanged(selection) {
+      console.log("previous selection = ", this.previousSelection);
+
+      let selected = null;
+      if (this.previousSelection.length < selection.length) {
+        selected = selection.filter(
+          (x) => !this.previousSelection.includes(x)
+        )[0];
+      } else if (this.previousSelection.length > selection.length) {
+        selected = this.previousSelection.filter(
+          (x) => !selection.includes(x)
+        )[0];
+      }
+
+      console.log("selected = ", selected);
+
+      this.previousSelection = selection;
+      console.log("selection = ", selection);
     },
   },
 };
