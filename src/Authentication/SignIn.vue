@@ -1,7 +1,21 @@
 <template>
-  <div class="signup-container">
-    <div>
+  <div class="signin-container">
+    <div class="web-avatar">
       <img src="../assets/payment.png" alt="signup png" />
+    </div>
+    <div class="logo">
+      <img src="../assets/airtel-payment.png" alt="app-logo"/>
+      <v-btn
+            @click="signup"
+            :elevation="0"
+            color="red darken-1 !important"
+            borderColor="red"
+            text
+            :border="1"
+            class="signup-btn"
+          >
+            SignUp
+          </v-btn>
     </div>
     <div class="signin-form-container">
       <div class="form-title-container">
@@ -34,7 +48,7 @@
         <v-btn
           class="mr-4"
           dark
-          @click="submit"
+          @click="login"
           color="red darken-1"
           :elevation="0"
         >
@@ -47,6 +61,9 @@
 <script>
 import { validationMixin } from "vuelidate";
 import { required, maxLength, minLength } from "vuelidate/lib/validators";
+import Vue from "vue";
+import AuthService from "../services/Auth";
+
 export default {
   mixins: [validationMixin],
   validations: {
@@ -88,9 +105,44 @@ export default {
     },
   },
   methods: {
-    submit() {
-      this.$v.$touch();
+    async login() {
+      try {
+        this.$v.$touch();
+        if (this.phone.length > 0 && this.pin.length > 0) {
+          const formData = new FormData();
+          formData.append("username", this.phone);
+          formData.append("password", this.pin);
+          const res = await AuthService.login(formData);
+          const token = res.access_token;
+          const user = res.data;
+          console.log(token, user, "saved data");
+          this.$store.dispatch("login", { token, user });
+          this.$cookie.set("token", token, {
+            expires: "30m",
+            domain: "localhost",
+          });
+          console.log(res.data);
+          Vue.notify({
+            group: "auth",
+            title: "Authentication Success",
+            text: "Successfuly loggedIn!",
+            type: "success",
+          });
+          this.$router.replace("/dashboard");
+        }
+      } catch (error) {
+        Vue.notify({
+          group: "auth",
+          title: "Authentication Error",
+          text: error.response.data.detail[0].msg || error.response.data.detail,
+          type: "error",
+        });
+        console.log(error);
+      }
     },
+    signup(){
+      this.$router.push('/signup')
+    }
   },
 };
 </script>
@@ -100,7 +152,7 @@ export default {
   color: red !important;
   caret-color: red !important;
 }
-.signup-container {
+.signin-container {
   max-width: 100% !important;
   display: flex;
   align-items: center;
@@ -127,6 +179,9 @@ export default {
   font-size: 20px;
   font-weight: 500;
 }
+.logo{
+  display:none
+}
 .form-section {
   padding: 20px 0px;
   font-size: 13px;
@@ -147,6 +202,10 @@ export default {
   padding-left: 20px;
   margin-top: 10px;
 }
+.signup-btn {
+  border: 1px solid red;
+  padding:10px;
+}
 .mr-4 {
   color: white !important;
   background-color: red !important;
@@ -162,6 +221,27 @@ export default {
 @media (max-width: 600px) {
   .dialog {
     max-width: 80%;
+  }
+  .web-avatar{
+    display:none
+  }
+  .signin-form-container{
+    width:100%;
+    margin-top:100px;
+  }
+  .signin-container{
+    flex-direction: column;
+    height:65vh;
+    margin:0px 20px
+  }
+  .logo{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+  }
+  .logo >img{
+    width:200px
   }
 }
 </style>

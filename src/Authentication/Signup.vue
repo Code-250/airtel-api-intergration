@@ -1,7 +1,21 @@
 <template>
   <div class="signup-container">
-    <div>
+    <div class="web-avatar">
       <img src="../assets/payment.png" alt="signup png" />
+    </div>
+    <div class="logo">
+      <img src="../assets/airtel-payment.png" alt="app-logo"/>
+      <v-btn
+            @click="signin"
+            :elevation="0"
+            color="red darken-1 !important"
+            borderColor="red"
+            text
+            :border="1"
+            class="signup-btn"
+          >
+            SignIn
+          </v-btn>
     </div>
     <div class="signup-form-container">
       <div class="form-title-container">
@@ -59,6 +73,8 @@
 <script>
 import { validationMixin } from "vuelidate";
 import { required, maxLength } from "vuelidate/lib/validators";
+import Vue from "vue";
+import AuthService from "../services/Auth";
 
 export default {
   mixins: [validationMixin],
@@ -109,16 +125,41 @@ export default {
   },
 
   methods: {
-    submit: async () => {
-      this.$v.$touch();
-      // this.$router.replace("/");
-      if (
-        this.firstname.length > 0 &&
-        this.lastname.length > 0 &&
-        this.phone.length > 0 &&
-        this.pin.length > 0
-      ) {
-        this.$router.replace("/");
+    async submit() {
+      try {
+        this.$v.$touch();
+        // this.$router.replace("/");
+        console.log(this.firstname);
+        if (
+          this.firstname.length > 0 &&
+          this.lastname.length > 0 &&
+          this.phone.length > 0 &&
+          this.pin.length > 0
+        ) {
+          const credentials = {
+            first_name: this.firstname,
+            last_name: this.lastname,
+            phone: this.phone,
+            password: this.pin,
+          };
+          await AuthService.signup(credentials);
+          Vue.notify({
+            group: "auth",
+            title: "Account Registration",
+            text:
+              "You have successfully registerd your account Please proceed to login,",
+            type: "success",
+          });
+          this.$router.replace("/");
+        }
+      } catch (error) {
+        Vue.notify({
+          group: "auth",
+          title: "Authentication Error",
+          text: error.response.data.detail[0].msg || error.response.data.detail,
+          type: "error",
+        });
+        console.log(error.response.data.detail[0].msg);
       }
     },
     clear() {
@@ -128,6 +169,10 @@ export default {
       this.phone = "";
       this.pin = "";
     },
+    signin(){
+      console.log("these are the data we have ");
+      return this.$router.push('/')
+    }
   },
 };
 </script>
@@ -206,6 +251,32 @@ export default {
 @media (max-width: 600px) {
   .dialog {
     max-width: 80%;
+  }
+  .web-avatar{
+    display:none
+  }
+  .signup-form-container{
+    width:100%;
+    height:100vh;
+    margin:50px 20px
+  }
+  .signup-container{
+    flex-direction: column;
+    height:85vh !important;
+    margin:0px 20px
+  }
+  .logo{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    margin-top:20px
+  }
+  .logo >img{
+    width:200px
+  }
+  .form-section{
+    width:60% !important
   }
 }
 </style>

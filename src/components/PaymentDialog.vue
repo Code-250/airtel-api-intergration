@@ -8,8 +8,10 @@
       </template>
       <v-card>
         <v-card-title color="red darken-1" text>Payment Modal</v-card-title>
+        <v-card-title color="red darken-1" text>{{fetchData}}</v-card-title>
         <template>
-          <form class="form-container">
+          <form ref="form" class="form-container">
+            
             <v-text-field
               v-model="phone"
               type="number"
@@ -54,6 +56,7 @@
               @blur="$v.checkbox.$touch()"
             ></v-checkbox>
             <v-btn
+              ref="submit"
               class="mr-4"
               dark
               @click="submit"
@@ -83,6 +86,7 @@
       </template> -->
       <v-card>
         <v-card-title color="red darken-1" text>Confirm Payment</v-card-title>
+        <v-card-title color="red darken-1" text>{{fetchData}}</v-card-title>
         <template>
           <form class="form-container">
             <v-text-field
@@ -118,9 +122,13 @@
   </v-row>
 </template>
 <script>
+import Vue from "vue";
 import { validationMixin } from "vuelidate";
 import { required, maxLength, minLength } from "vuelidate/lib/validators";
+import AuthService from "../services/Auth";
+
 export default {
+  props:['fetchData'],
   mixins: [validationMixin],
   validations: {
     phone: {
@@ -195,21 +203,48 @@ export default {
     changeUser() {
       console.log(this.select);
     },
-    submit() {
-      this.$v.$touch();
-      const formData = {
-        phoneNumber: this.phone,
-        product: this.select.product,
-        Amount: this.select.amount,
-        Pin: this.pin,
-      };
-      if (
-        !this.$v.phone.$error &&
-        !this.$v.select.$error &&
-        this.$v.checkbox.checked
-      )
-        this.dialog1 = !this.dialog1;
-      console.log(formData);
+    async submit() {
+      try {
+        this.$v.$touch();
+        const formData = {
+          receiver_phone: this.phone,
+          sender_phone: "",
+          product: this.select.product,
+          amount: this.select.amount,
+          Pin: this.pin,
+        };
+        if (
+          !this.$v.phone.$error &&
+          !this.$v.select.$error &&
+          this.$v.checkbox.checked
+        ) {
+          // this.dialog1 = !this.dialog1;
+          const token = this.$cookie.get("token");
+          const data = await AuthService.createTransaction(formData, token);
+          console.log(data, "these are the data created");
+          this.$store.dispatch("createTransaction", { data });
+          this.$root.$emit('Table');
+          this.$nextTick(()=>{
+            this.$refs.form.submit();
+          })
+        }
+        this.dialog = !this.dialog;
+        Vue.notify({
+          group: "auth",
+          title: "Transaction Payment Success",
+          text: "your Payment was  successfull!",
+          type: "success",
+        });
+        console.log(formData);
+      } catch (error) {
+        Vue.notify({
+          group: "auth",
+          title: "Transaction Payment error",
+          text: "your Payment was not successful please try again later",
+          type: "error",
+        });
+        console.log(error);
+      }
     },
     authenticate() {
       const formData = {

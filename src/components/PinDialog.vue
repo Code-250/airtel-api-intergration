@@ -45,6 +45,7 @@
 <script>
 import { validationMixin } from "vuelidate";
 import { required, maxLength, minLength } from "vuelidate/lib/validators";
+// import AuthService from "../services/Auth";
 export default {
   mixins: [validationMixin],
 
@@ -107,13 +108,17 @@ export default {
   },
 
   methods: {
-    submit() {
+    async submit() {
       this.$v.$touch();
       const formData = {
         phoneNumber: this.phone,
         Amount: this.amount,
+        product: this.select,
         Pin: this.pin,
       };
+      // const token = this.$cookie.get("token");
+      // await AuthService.createTransaction(formData, token);
+
       console.log(formData);
     },
     clear() {
